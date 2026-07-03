@@ -12,9 +12,9 @@ namespace practice_dotnet.Services
             _context = context;
         }
 
-        public async Task<Note> GetUserNote(int userId)
+        public async Task<Note> GetUserNote(int userId, int noteId)
         {
-            var note = await _context.Notes.Where(n => n.User.Id == userId).FirstOrDefaultAsync();
+            var note = await _context.Notes.Where(n => n.User.Id == userId && n.Id == noteId).FirstOrDefaultAsync();
             return note;
         }
 
