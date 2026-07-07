@@ -43,6 +43,5 @@ namespace practice_dotnet.Services
             existingNote.Description = updatedFields.Description;
             return await _context.SaveChangesAsync() > 0;
         }
-        public async 
     }
 }
