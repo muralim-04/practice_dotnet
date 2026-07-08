@@ -1,7 +1,6 @@
 bin/
 obj/
 appsettings.Development.json
-Properties/
 .vs/
 *.user
 

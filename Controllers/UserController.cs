@@ -17,9 +17,16 @@ namespace practice_dotnet.Controllers
         }
 
         [HttpPost]
-        public async Task<bool> CreateUser([FromBody] UserReqDto user)
+        public async Task<ActionResult<Response<UserResDto>>> CreateUser([FromBody] UserReqDto user)
         {
-            return true;
+            var result = await _userService.AddUser(user);
+
+            if(!result.Success)
+            {
+                return BadRequest(result);
+            }
+
+            return Ok(result);           
         }
     }
 }

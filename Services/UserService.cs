@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using practice_dotnet.Data;
+using practice_dotnet.DTOs;
 using practice_dotnet.Entities;
 
 namespace practice_dotnet.Services
@@ -23,10 +24,40 @@ namespace practice_dotnet.Services
             var user = await _context.Users.FindAsync(userId);
             return user;
         }
-        public async Task<bool> AddUser(User user)
+        public async Task<Response<UserResDto>> AddUser(UserReqDto user)
         {
-            _context.Users.Add(user);
-            return await _context.SaveChangesAsync() > 0;
+            // Checking if user already exists
+            var existingUser = await _context.Users.AnyAsync(u => u.Email == user.Email);
+
+            //if user exists send an error message
+            if (existingUser)
+            {
+                return Response<UserResDto>.Fail("User already exists"); 
+            }
+            // creating a new user
+            var userEntity = new User
+            {
+                Name = user.Name,
+                Email = user.Email,
+                Password = user.Password
+            };
+            //saving the user in the database
+            try
+            {
+                _context.Users.Add(userEntity);
+                await _context.SaveChangesAsync();
+                var dto = new UserResDto 
+                {
+                    Id = userEntity.Id,
+                    Name = userEntity.Name,
+                    Email = userEntity.Email
+                };
+                return Response<UserResDto>.Ok(dto);
+            }
+            catch
+            {
+                return Response<UserResDto>.Fail("Unexpected error occured while saving the user");
+            }
         }
         public async Task<bool> DeleteUser(int id)
         {
