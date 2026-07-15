@@ -16,6 +16,19 @@ namespace practice_dotnet.Controllers
             _userService = userService;
         }
 
+        [HttpGet]
+        public async Task<ActionResult<Response<List<UserResDto>>>> GetAllUsers()
+        {
+            var result = await _userService.GetAllUsers();
+
+            if (!result.Success)
+            {
+                return BadRequest(result);
+            }
+
+            return Ok(result);
+        }
+
         [HttpPost]
         public async Task<ActionResult<Response<UserResDto>>> CreateUser([FromBody] UserReqDto user)
         {
@@ -28,5 +41,6 @@ namespace practice_dotnet.Controllers
 
             return Ok(result);           
         }
+
     }
 }

@@ -14,10 +14,24 @@ namespace practice_dotnet.Services
         }
 
 
-        public async Task<List<User>> GetAllUsers()
+        public async Task<Response<List<UserResDto>>> GetAllUsers()
         {
-            var users = await _context.Users.ToListAsync();
-            return users;
+            try
+            {
+                var users = await _context.Users.ToListAsync();
+                var dto = users.Select(u => new UserResDto
+                {
+                    Id = u.Id,
+                    Name = u.Name,
+                    Email = u.Email
+                }).ToList();
+
+                return Response<List<UserResDto>>.Ok(dto);     
+            }
+            catch
+            {
+                return Response<List<UserResDto>>.Fail("Unexpected error occured while retrieving the users");
+            }
         }
         public async Task<User> GetUserById(int userId)
         {
