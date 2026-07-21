@@ -16,22 +16,17 @@ namespace practice_dotnet.Services
 
         public async Task<Response<List<UserResDto>>> GetAllUsers()
         {
-            try
-            {
-                var users = await _context.Users.ToListAsync();
-                var dto = users.Select(u => new UserResDto
-                {
-                    Id = u.Id,
-                    Name = u.Name,
-                    Email = u.Email
-                }).ToList();
 
-                return Response<List<UserResDto>>.Ok(dto);     
-            }
-            catch
+            var users = await _context.Users.ToListAsync();
+            var dto = users.Select(u => new UserResDto
             {
-                return Response<List<UserResDto>>.Fail("Unexpected error occured while retrieving the users");
-            }
+                Id = u.Id,
+                Name = u.Name,
+                Email = u.Email
+            }).ToList();
+
+            return Response<List<UserResDto>>.Ok(dto);     
+            
         }
         public async Task<User> GetUserById(int userId)
         {
@@ -55,26 +50,21 @@ namespace practice_dotnet.Services
                 Email = user.Email,
                 Password = user.Password
             };
+
             //saving the user in the database
-            try
+            _context.Users.Add(userEntity);
+            await _context.SaveChangesAsync();
+            var dto = new UserResDto 
             {
-                _context.Users.Add(userEntity);
-                await _context.SaveChangesAsync();
-                var dto = new UserResDto 
-                {
-                    Id = userEntity.Id,
-                    Name = userEntity.Name,
-                    Email = userEntity.Email
-                };
-                return Response<UserResDto>.Ok(dto);
-            }
-            catch
-            {
-                return Response<UserResDto>.Fail("Unexpected error occured while saving the user");
-            }
+                Id = userEntity.Id,
+                Name = userEntity.Name,
+                Email = userEntity.Email
+            };
+            return Response<UserResDto>.Ok(dto);
+                        
         }
         public async Task<bool> DeleteUser(int id)
-        {
+        { 
             var user = await _context.Users.FindAsync(id);
             if (user == null) return false;
             _context.Users.Remove(user);

@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using practice_dotnet.Data;
+using practice_dotnet.Middleware;
 using practice_dotnet.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -31,6 +32,8 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+
+app.UseMiddleware<GlobalExceptionHandler>();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

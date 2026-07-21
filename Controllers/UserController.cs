@@ -17,29 +17,37 @@ namespace practice_dotnet.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<Response<List<UserResDto>>>> GetAllUsers()
+        public async Task<ActionResult<List<UserResDto>>> GetAllUsers()
         {
             var result = await _userService.GetAllUsers();
 
             if (!result.Success)
             {
-                return BadRequest(result);
+                return Problem(
+                    statusCode: StatusCodes.Status400BadRequest,
+                    title: "Bad Request",
+                    detail: result.Message
+                );
             }
 
-            return Ok(result);
+            return Ok(result.Data);
         }
 
         [HttpPost]
-        public async Task<ActionResult<Response<UserResDto>>> CreateUser([FromBody] UserReqDto user)
+        public async Task<ActionResult<UserResDto>> CreateUser([FromBody] UserReqDto user)
         {
             var result = await _userService.AddUser(user);
 
             if(!result.Success)
             {
-                return BadRequest(result);
+                return Problem(
+                    statusCode: StatusCodes.Status400BadRequest,
+                    title: "Bad Request",
+                    detail: result.Message
+                );
             }
 
-            return Ok(result);           
+            return Ok(result.Data);           
         }
 
     }
