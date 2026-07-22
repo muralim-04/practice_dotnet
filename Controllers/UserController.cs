@@ -16,7 +16,7 @@ namespace practice_dotnet.Controllers
             _userService = userService;
         }
 
-        [HttpGet]
+        [HttpGet("getAllUsers")]
         public async Task<ActionResult<List<UserResDto>>> GetAllUsers()
         {
             var result = await _userService.GetAllUsers();
@@ -33,7 +33,8 @@ namespace practice_dotnet.Controllers
             return Ok(result.Data);
         }
 
-        [HttpPost]
+
+        [HttpPost("createUser")]
         public async Task<ActionResult<UserResDto>> CreateUser([FromBody] UserReqDto user)
         {
             var result = await _userService.AddUser(user);
@@ -50,5 +51,20 @@ namespace practice_dotnet.Controllers
             return Ok(result.Data);           
         }
 
+        [HttpDelete("deleteUser/{id:int}")]
+        public async Task<ActionResult> DeleteUser(int id)
+        {
+            var result = await _userService.DeleteUser(id);
+
+            if (!result.Success)
+            {
+                return Problem(
+                    statusCode: StatusCodes.Status400BadRequest,
+                    title: "Bad Request",
+                    detail: result.Message
+                );
+            }
+            return NoContent();
+        }
     }
 }

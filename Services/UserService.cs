@@ -28,10 +28,23 @@ namespace practice_dotnet.Services
             return Response<List<UserResDto>>.Ok(dto);     
             
         }
-        public async Task<User> GetUserById(int userId)
+        public async Task<Response<UserResDto>> GetUserById(int userId)
         {
-            var user = await _context.Users.FindAsync(userId);
-            return user;
+            // Checking if user already exists
+            var userEntity = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
+
+            if (userEntity == null)
+            {
+                return Response<UserResDto>.Fail("User doesn't exist");
+            }
+            var user = new UserResDto
+            {
+                Id = userEntity.Id,
+                Name = userEntity.Name,
+                Email = userEntity.Email,
+            };
+
+            return Response<UserResDto>.Ok(user);
         }
         public async Task<Response<UserResDto>> AddUser(UserReqDto user)
         {
@@ -63,12 +76,16 @@ namespace practice_dotnet.Services
             return Response<UserResDto>.Ok(dto);
                         
         }
-        public async Task<bool> DeleteUser(int id)
+        public async Task<Response<bool>> DeleteUser(int userId)
         { 
-            var user = await _context.Users.FindAsync(id);
-            if (user == null) return false;
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null)
+            {
+                return Response<bool>.Fail("User doesn't exist");
+            }
             _context.Users.Remove(user);
-            return await _context.SaveChangesAsync() > 0;
+            await _context.SaveChangesAsync();
+            return Response<bool>.Ok(true);
         }
         public async Task<bool> UpdateUser(int id, User updatedFields)
         {
