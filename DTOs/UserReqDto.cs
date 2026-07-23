@@ -6,15 +6,15 @@ namespace practice_dotnet.DTOs
     {
         [Required]
         [StringLength(40, MinimumLength =4)]
-        public string? Name { get; set; }
+        public required string UserName { get; set; }
 
         [Required]
         [StringLength(40, MinimumLength = 6)]
         [RegularExpression(@"^(?=.*[a-z])(?=.*\d).+$")]
-        public string? Password { get; set; }
+        public required string Password { get; set; }
 
         [Required]
         [EmailAddress]
-        public string? Email { get; set; }
+        public required string Email { get; set; }
     }
 }

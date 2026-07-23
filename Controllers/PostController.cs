@@ -2,16 +2,16 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using practice_dotnet.Entities;
-using practice_dotnet.Services;
+using practice_dotnet.Services.PostServices;
 
 namespace practice_dotnet.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class NotesController : ControllerBase
+    public class PostController : ControllerBase
     {
-        private readonly NoteService _noteService;
-        public NotesController(NoteService noteService)
+        private readonly IPostService _noteService;
+        public PostController(IPostService noteService)
         {
             _noteService = noteService;
         }

@@ -1,4 +1,4 @@
-﻿namespace practice_dotnet.Entities
+﻿namespace practice_dotnet.Helpers
 {
     public class Response<T>
     {

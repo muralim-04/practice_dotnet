@@ -1,7 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using practice_dotnet.Data;
 using practice_dotnet.Middleware;
-using practice_dotnet.Services;
+using practice_dotnet.Services.PostServices;
+using practice_dotnet.Services.UserServices;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,8 +15,8 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<DataContext>(options => 
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"))
 );
-builder.Services.AddScoped<UserService>();
-builder.Services.AddScoped<NoteService>();
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IPostService, PostService>();
 
 var myAllowSpecificOrigins = "_myAllowSpecificOrigins";
 var allowedOrigins = builder.Configuration.GetSection("AllowedOrigins").Get<string[]>();
