@@ -21,7 +21,7 @@ namespace practice_dotnet.Services
             var dto = users.Select(u => new UserResDto
             {
                 Id = u.Id,
-                Name = u.Name,
+                Name = u.UserName,
                 Email = u.Email
             }).ToList();
 
@@ -40,7 +40,7 @@ namespace practice_dotnet.Services
             var user = new UserResDto
             {
                 Id = userEntity.Id,
-                Name = userEntity.Name,
+                Name = userEntity.UserName,
                 Email = userEntity.Email,
             };
 
@@ -59,7 +59,7 @@ namespace practice_dotnet.Services
             // creating a new user
             var userEntity = new User
             {
-                Name = user.Name,
+                UserName = user.Name,
                 Email = user.Email,
                 Password = user.Password
             };
@@ -70,7 +70,7 @@ namespace practice_dotnet.Services
             var dto = new UserResDto 
             {
                 Id = userEntity.Id,
-                Name = userEntity.Name,
+                Name = userEntity.UserName,
                 Email = userEntity.Email
             };
             return Response<UserResDto>.Ok(dto);
@@ -94,7 +94,7 @@ namespace practice_dotnet.Services
             if (existingUser == null) return false;
 
           
-            existingUser.Name = updatedFields.Name;
+            existingUser.UserName = updatedFields.UserName;
             existingUser.Email = updatedFields.Email;
 
             return await _context.SaveChangesAsync() > 0;
