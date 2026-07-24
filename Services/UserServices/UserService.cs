@@ -108,13 +108,13 @@ namespace practice_dotnet.Services.UserServices
             return Response<bool>.Ok(true);
         }
 
-        public async Task<Response<string>> Register(UserReqDto user)
+        public async Task<Response<User>> Register(UserReqDto user)
         {
             var userExist = await _context.Users.FirstOrDefaultAsync(u => u.Email == user.Email);
 
             if(userExist != null)
             {
-                return Response<string>.Fail("User already exist");
+                return Response<User>.Fail("User already exist");
             }
 
             var hashedPassword = BCrypt.Net.BCrypt.HashPassword(user.Password);
@@ -128,31 +128,65 @@ namespace practice_dotnet.Services.UserServices
             await _context.Users.AddAsync(newUser);
             await _context.SaveChangesAsync();
 
-            string token = GenerateToken(newUser);
-
-            return Response<string>.Ok(token);
+            return Response<User>.Ok(newUser);
         }
 
-        public Task SignIn()
+        public async Task<Response<User>> SignIn(UserReqDto user)
         {
-            throw new NotImplementedException();
+            var existingUser = await _context.Users.FirstOrDefaultAsync(u => u.Email == user.Email);
+            if (existingUser == null)
+            {
+                return Response<User>.Fail("User with this email doesn't exist");
+            }
+
+            bool isPasswordValid = BCrypt.Net.BCrypt.Verify(user.Password, existingUser.Password);
+            if (!isPasswordValid)
+            {
+                return Response<User>.Fail("Incorrect password");
+            }
+            return Response<User>.Ok(existingUser);
         }
 
-        public Task SignOut()
+        public async Task<Response<bool>> UpadateUserPassword(int userId, UpdatePasswordDto dto)
         {
-            throw new NotImplementedException();
+            var existingUser = await _context.Users.FindAsync(userId);
+            if (existingUser == null)
+            {
+                return Response<bool>.Fail("User not found");
+            }
+
+            bool isPasswordValid = BCrypt.Net.BCrypt.Verify(dto.CurrentPassword, existingUser.Password);
+            if (!isPasswordValid)
+            {
+                return Response<bool>.Fail("Incorrect password");
+            }
+
+            existingUser.Password = BCrypt.Net.BCrypt.HashPassword(dto.NewPassword);
+            await _context.SaveChangesAsync();
+
+            return Response<bool>.Ok(true);
         }
 
-        public Task UpadateUserPassword()
+        public async Task<Response<UserResDto>> UpdateUserDeatail(int userId, UpdateUserDto dto)
         {
-            throw new NotImplementedException();
-        }
+            var existingUser = await _context.Users.FindAsync(userId);
+            if (existingUser == null)
+            {
+                return Response<UserResDto>.Fail("User not found");
+            }
 
-        public Task UpdateUserDeatail()
-        {
-            throw new NotImplementedException();
+            existingUser.UserName = dto.UserName;
+            await _context.SaveChangesAsync();
+
+            var updatedUser = new UserResDto
+            {
+                Id = existingUser.Id,
+                UserName = existingUser.UserName,
+                Email = existingUser.Email
+            };
+            return Response<UserResDto>.Ok(updatedUser);
         }
-        private string GenerateToken(User user)
+        public string GenerateToken(User user)
         {
             // 1. Define the Claims (Payload data)
             var claims = new[]
