@@ -108,13 +108,13 @@ namespace practice_dotnet.Services.UserServices
             return Response<bool>.Ok(true);
         }
 
-        public async Task<Response<User>> Register(UserReqDto user)
+        public async Task<Response<UserResDto>> Register(UserReqDto user)
         {
             var userExist = await _context.Users.FirstOrDefaultAsync(u => u.Email == user.Email);
 
             if(userExist != null)
             {
-                return Response<User>.Fail("User already exist");
+                return Response<UserResDto>.Fail("User already exist");
             }
 
             var hashedPassword = BCrypt.Net.BCrypt.HashPassword(user.Password);
@@ -127,27 +127,45 @@ namespace practice_dotnet.Services.UserServices
             };
             await _context.Users.AddAsync(newUser);
             await _context.SaveChangesAsync();
+            var token = GenerateToken(newUser);
 
-            return Response<User>.Ok(newUser);
+            var response = new UserResDto
+            {
+                Id = newUser.Id,
+                UserName = newUser.UserName,
+                Email = newUser.Email,
+                Token = token
+            };
+
+            return Response<UserResDto>.Ok(response);
         }
 
-        public async Task<Response<User>> SignIn(UserReqDto user)
+        public async Task<Response<UserResDto>> SignIn(SignInDto user)
         {
             var existingUser = await _context.Users.FirstOrDefaultAsync(u => u.Email == user.Email);
             if (existingUser == null)
             {
-                return Response<User>.Fail("User with this email doesn't exist");
+                return Response<UserResDto>.Fail("User with this email doesn't exist");
             }
 
             bool isPasswordValid = BCrypt.Net.BCrypt.Verify(user.Password, existingUser.Password);
             if (!isPasswordValid)
             {
-                return Response<User>.Fail("Incorrect password");
+                return Response<UserResDto>.Fail("Incorrect password");
             }
-            return Response<User>.Ok(existingUser);
+
+            var token = GenerateToken(existingUser);
+            var response = new UserResDto
+            {
+                Id = existingUser.Id,
+                UserName = existingUser.UserName,
+                Email = existingUser.Email,
+                Token = token
+            };
+            return Response<UserResDto>.Ok(response);
         }
 
-        public async Task<Response<bool>> UpadateUserPassword(int userId, UpdatePasswordDto dto)
+        public async Task<Response<bool>> UpdateUserPassword(int userId, UpdatePasswordDto dto)
         {
             var existingUser = await _context.Users.FindAsync(userId);
             if (existingUser == null)
@@ -191,10 +209,10 @@ namespace practice_dotnet.Services.UserServices
             // 1. Define the Claims (Payload data)
             var claims = new[]
             {
-            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-            new Claim(ClaimTypes.Name, user.UserName),
-            new Claim(ClaimTypes.Email, user.Email),
-            new Claim(ClaimTypes.Role, user.IsAdmin ? "Admin" : "User")
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                new Claim(ClaimTypes.Name, user.UserName),
+                new Claim(ClaimTypes.Email, user.Email),
+                new Claim(ClaimTypes.Role, user.IsAdmin ? "Admin" : "User")
             };
 
             // 2. Turn your secret key string into a byte array & cryptographic key

@@ -6,11 +6,11 @@ namespace practice_dotnet.Services.UserServices
 {
     public interface IUserService
     {
-        Task<Response<User>> Register(UserReqDto user);
-        Task<Response<User>> SignIn(UserReqDto user);
+        Task<Response<UserResDto>> Register(UserReqDto user);
+        Task<Response<UserResDto>> SignIn(SignInDto user);
         Task<Response<UserResDto>> GetUser(int id);
-        Task UpdateUserDeatail();
-        Task<Response<bool>> UpadateUserPassword(int userId, UpdatePasswordDto dto);
+        Task<Response<UserResDto>> UpdateUserDeatail(int userId, UpdateUserDto dto);
+        Task<Response<bool>> UpdateUserPassword(int userId, UpdatePasswordDto dto);
         Task<Response<bool>> DeleteAccount(int id);
         string GenerateToken(User user);
 
