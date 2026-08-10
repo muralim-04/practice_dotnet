@@ -122,7 +122,7 @@ namespace practice_dotnet.Services.UserServices
             var newUser = new User
             {
                 Email = user.Email,
-                Password = hashedPassword,
+                PasswordHash = hashedPassword,
                 UserName = user.UserName
             };
             await _context.Users.AddAsync(newUser);
@@ -140,7 +140,7 @@ namespace practice_dotnet.Services.UserServices
             return Response<UserResDto>.Ok(response);
         }
 
-        public async Task<Response<UserResDto>> SignIn(SignInDto user)
+        public async Task<Response<UserResDto>> LogIn(LogInDto user)
         {
             var existingUser = await _context.Users.FirstOrDefaultAsync(u => u.Email == user.Email);
             if (existingUser == null)
@@ -148,7 +148,7 @@ namespace practice_dotnet.Services.UserServices
                 return Response<UserResDto>.Fail("User with this email doesn't exist");
             }
 
-            bool isPasswordValid = BCrypt.Net.BCrypt.Verify(user.Password, existingUser.Password);
+            bool isPasswordValid = BCrypt.Net.BCrypt.Verify(user.Password, existingUser.PasswordHash);
             if (!isPasswordValid)
             {
                 return Response<UserResDto>.Fail("Incorrect password");
@@ -173,13 +173,13 @@ namespace practice_dotnet.Services.UserServices
                 return Response<bool>.Fail("User not found");
             }
 
-            bool isPasswordValid = BCrypt.Net.BCrypt.Verify(dto.CurrentPassword, existingUser.Password);
+            bool isPasswordValid = BCrypt.Net.BCrypt.Verify(dto.CurrentPassword, existingUser.PasswordHash);
             if (!isPasswordValid)
             {
                 return Response<bool>.Fail("Incorrect password");
             }
 
-            existingUser.Password = BCrypt.Net.BCrypt.HashPassword(dto.NewPassword);
+            existingUser.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.NewPassword);
             await _context.SaveChangesAsync();
 
             return Response<bool>.Ok(true);

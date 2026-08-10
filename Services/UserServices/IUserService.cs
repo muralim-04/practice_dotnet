@@ -7,7 +7,7 @@ namespace practice_dotnet.Services.UserServices
     public interface IUserService
     {
         Task<Response<UserResDto>> Register(UserReqDto user);
-        Task<Response<UserResDto>> SignIn(SignInDto user);
+        Task<Response<UserResDto>> LogIn(LogInDto user);
         Task<Response<UserResDto>> GetUser(int id);
         Task<Response<UserResDto>> UpdateUserDeatail(int userId, UpdateUserDto dto);
         Task<Response<bool>> UpdateUserPassword(int userId, UpdatePasswordDto dto);

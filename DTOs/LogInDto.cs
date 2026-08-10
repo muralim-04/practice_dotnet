@@ -2,7 +2,7 @@
 
 namespace practice_dotnet.DTOs
 {
-    public class SignInDto
+    public class LogInDto
     {
         [Required]
         [StringLength(40, MinimumLength = 6)]

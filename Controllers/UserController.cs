@@ -34,10 +34,10 @@ namespace practice_dotnet.Controllers
             return Ok(response.Data);
         }
 
-        [HttpPost("signin")]
-        public async Task<ActionResult<UserResDto>> SignIn([FromBody] SignInDto user)
+        [HttpPost("login")]
+        public async Task<ActionResult<UserResDto>> LogIn([FromBody] LogInDto user)
         {
-            var response = await _userService.SignIn(user);
+            var response = await _userService.LogIn(user);
 
             if (!response.Success)
             {

@@ -14,6 +14,7 @@ namespace practice_dotnet.Data
         public DbSet<UserPost> UserPosts { get; set; }
         public DbSet<Comment> Comments { get; set; }
         public DbSet<PostLike> PostLikes { get; set; }
+        public DbSet<RefreshToken> RefreshTokens { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -51,6 +52,14 @@ namespace practice_dotnet.Data
                 .HasOne(pl => pl.UserPost)
                 .WithMany(p => p.Likes) 
                 .HasForeignKey(pl => pl.PostId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+
+            // RefreshToken added 
+            modelBuilder.Entity<RefreshToken>()
+                .HasOne(rt => rt.User)
+                .WithOne(u => u.RefreshToken)
+                .HasForeignKey<RefreshToken>(rt => rt.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
 
         }
