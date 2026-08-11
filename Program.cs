@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using practice_dotnet.Data;
 using practice_dotnet.Middleware;
+using practice_dotnet.Services.AuthService;
 using practice_dotnet.Services.PostServices;
 using practice_dotnet.Services.UserServices;
 using System.Text;
@@ -19,6 +20,7 @@ builder.Services.AddDbContext<DataContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"))
 );
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IPostService, PostService>();
 
 var myAllowSpecificOrigins = "_myAllowSpecificOrigins";

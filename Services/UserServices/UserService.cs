@@ -35,6 +35,9 @@ namespace practice_dotnet.Services.UserServices
             var userComments = _context.Comments.Where(c => c.UserId == id);
             _context.Comments.RemoveRange(userComments);
 
+            var userToken = _context.RefreshTokens.Where(rt => rt.UserId == id);
+            _context.RefreshTokens.RemoveRange(userToken);
+
             _context.Users.Remove(user);
             await _context.SaveChangesAsync();
             return Response<bool>.Ok(true);
@@ -106,63 +109,6 @@ namespace practice_dotnet.Services.UserServices
             user.IsAdmin = true;
             await _context.SaveChangesAsync();
             return Response<bool>.Ok(true);
-        }
-
-        public async Task<Response<UserResDto>> Register(UserReqDto user)
-        {
-            var userExist = await _context.Users.FirstOrDefaultAsync(u => u.Email == user.Email);
-
-            if(userExist != null)
-            {
-                return Response<UserResDto>.Fail("User already exist");
-            }
-
-            var hashedPassword = BCrypt.Net.BCrypt.HashPassword(user.Password);
-
-            var newUser = new User
-            {
-                Email = user.Email,
-                PasswordHash = hashedPassword,
-                UserName = user.UserName
-            };
-            await _context.Users.AddAsync(newUser);
-            await _context.SaveChangesAsync();
-            var token = GenerateToken(newUser);
-
-            var response = new UserResDto
-            {
-                Id = newUser.Id,
-                UserName = newUser.UserName,
-                Email = newUser.Email,
-                Token = token
-            };
-
-            return Response<UserResDto>.Ok(response);
-        }
-
-        public async Task<Response<UserResDto>> LogIn(LogInDto user)
-        {
-            var existingUser = await _context.Users.FirstOrDefaultAsync(u => u.Email == user.Email);
-            if (existingUser == null)
-            {
-                return Response<UserResDto>.Fail("User with this email doesn't exist");
-            }
-
-            bool isPasswordValid = BCrypt.Net.BCrypt.Verify(user.Password, existingUser.PasswordHash);
-            if (!isPasswordValid)
-            {
-                return Response<UserResDto>.Fail("Incorrect password");
-            }
-
-            var token = GenerateToken(existingUser);
-            var response = new UserResDto
-            {
-                Id = existingUser.Id,
-                UserName = existingUser.UserName,
-                Email = existingUser.Email,
-                Token = token
-            };
-            return Response<UserResDto>.Ok(response);
         }
 
         public async Task<Response<bool>> UpdateUserPassword(int userId, UpdatePasswordDto dto)
