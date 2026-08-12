@@ -1,8 +1,11 @@
-﻿namespace practice_dotnet.Services.PostServices
+﻿using practice_dotnet.DTOs;
+using practice_dotnet.Helpers;
+
+namespace practice_dotnet.Services.PostServices
 {
     public interface IPostService
     {
-        Task CreatePost();
+        Task<Response<bool>> CreatePost(ReqPostDto post, int userId);
         Task GetPost();
         Task GetAllPosts();
         Task GetUserPosts();

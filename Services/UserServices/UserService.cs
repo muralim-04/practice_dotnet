@@ -73,24 +73,25 @@ namespace practice_dotnet.Services.UserServices
             return Response<PagedResult<UserResDto>>.Ok(data);
         }
 
-        public async Task<Response<UserResDto>> GetUser(int id)
+        public async Task<Response<UserProfileDto>> GetUserProfile(int id)
         {
             var user = await _context.Users
                 .Where(u => u.Id == id)
-                .Select(u => new UserResDto
+                .Select(u => new UserProfileDto
                 {
-                    Id = u.Id,
                     Email = u.Email,
-                    UserName = u.UserName
+                    UserName = u.UserName,
+                    AvatarUrl = u.AvatarUrl,
+                    Bio = u.Bio
                 })
                 .FirstOrDefaultAsync();
 
             if (user == null)
             {
-                return Response<UserResDto>.Fail("User was not found");
+                return Response<UserProfileDto>.Fail("User was not found");
             }
 
-            return Response<UserResDto>.Ok(user);
+            return Response<UserProfileDto>.Ok(user);
         }
 
         public async Task<Response<bool>> MakeAdmin(int id)
@@ -150,35 +151,6 @@ namespace practice_dotnet.Services.UserServices
             };
             return Response<UserResDto>.Ok(updatedUser);
         }
-        public string GenerateToken(User user)
-        {
-            // 1. Define the Claims (Payload data)
-            var claims = new[]
-            {
-                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new Claim(ClaimTypes.Name, user.UserName),
-                new Claim(ClaimTypes.Email, user.Email),
-                new Claim(ClaimTypes.Role, user.IsAdmin ? "Admin" : "User")
-            };
 
-            // 2. Turn your secret key string into a byte array & cryptographic key
-            var secretKey = _config["JwtSettings:SecretKey"]!;
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
-
-            // 3. Define the Signing Credentials (Algorithm + Key)
-            var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
-            // 4. Create the Token Object
-            var token = new JwtSecurityToken(
-                issuer: _config["JwtSettings:Issuer"],
-                audience: _config["JwtSettings:Audience"],
-                claims: claims,
-                expires: DateTime.UtcNow.AddDays(2), // Expiration time
-                signingCredentials: credentials      // This signs the token!
-            );
-
-            // 5. Serialize the token object into a compact string (Header.Payload.Signature)
-            return new JwtSecurityTokenHandler().WriteToken(token);
-        }
     }
 }
