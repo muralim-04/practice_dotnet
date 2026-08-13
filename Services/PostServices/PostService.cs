@@ -21,13 +21,16 @@ namespace practice_dotnet.Services.PostServices
             throw new NotImplementedException();
         }
 
-        public async Task<Response<bool>> CreatePost(ReqPostDto post, int userId)
+        public async Task<Response<PostResDto>> CreatePost(PostReqDto post, int userId)
         {
-            var userExists = await _context.Users.AnyAsync(u => u.Id == userId);
+            var userName = await _context.Users
+                .Where(u => u.Id == userId)
+                .Select(u => u.UserName)
+                .FirstOrDefaultAsync();
 
-            if (!userExists)
+            if (userName == null)
             {
-                return Response<bool>.Fail("User was not found");
+                return Response<PostResDto>.Fail("User was not found");
             }
 
             string? imageUrl = null;
@@ -47,7 +50,17 @@ namespace practice_dotnet.Services.PostServices
             _context.UserPosts.Add(newPost);
             await _context.SaveChangesAsync();
 
-            return Response<bool>.Ok(true);
+            var userPostDto = new PostResDto
+            {
+                Id = newPost.Id,
+                Title = newPost.Title,
+                Content = newPost.Content,
+                ImageUrl = newPost.ImageUrl,
+                CreatedAt = newPost.CreatedAt,
+                UserName = userName
+            };
+
+            return Response<PostResDto>.Ok(userPostDto);
         }
 
         public Task DeleteComment()
@@ -75,6 +88,26 @@ namespace practice_dotnet.Services.PostServices
 
             return Response<bool>.Ok(true);
         }
+        public async Task<Response<bool>> DeletePostAdmin(int postId)
+        {
+            var post = await _context.UserPosts
+                .FirstOrDefaultAsync(p => p.Id == postId);
+
+            if (post == null)
+            {
+                return Response<bool>.Fail("Post not found.");
+            }
+
+            if (!string.IsNullOrEmpty(post.ImageUrl))
+            {
+                DeleteImageFile(post.ImageUrl);
+            }
+
+            _context.UserPosts.Remove(post);
+            await _context.SaveChangesAsync();
+
+            return Response<bool>.Ok(true);
+        }
 
         public Task EditComment()
         {
@@ -86,9 +119,39 @@ namespace practice_dotnet.Services.PostServices
             throw new NotImplementedException();
         }
 
-        public Task GetAllPosts()
+        public async Task<Response<PagedResult<PostResDto>>> GetAllPosts(int pageNumber, int pageSize)
         {
-            throw new NotImplementedException();
+            if (pageNumber < 1) pageNumber = 1;
+            if (pageSize < 1) pageSize = 10;
+
+            var totalCount = await _context.UserPosts.CountAsync();
+
+            var posts = await _context.UserPosts
+                .OrderByDescending(up => up.CreatedAt)
+                .ThenByDescending(up => up.Id)
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .Select(up => new PostResDto
+                {
+                    Id = up.Id,
+                    Title = up.Title,
+                    Content = up.Content,
+                    ImageUrl = up.ImageUrl,
+                    CreatedAt = up.CreatedAt,
+                    UserName = up.User.UserName
+                })
+                .ToListAsync();
+
+            var data = new PagedResult<PostResDto>
+            {
+                Items = posts,
+                PageNumber = pageNumber,
+                PageSize = pageSize,
+                TotalCount = totalCount,
+                TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize)
+            };
+
+            return Response<PagedResult<PostResDto>>.Ok(data);
         }
 
         public Task GetPost()
@@ -129,8 +192,6 @@ namespace practice_dotnet.Services.PostServices
         private async Task<string> UploadImageAsync(IFormFile file)
         {
             string uploadsFolder = Path.Combine(_environment.ContentRootPath, "Uploads");
-
-            Directory.CreateDirectory(uploadsFolder);
 
             string uniqueFileName = $"{Guid.NewGuid()}_{file.FileName}";
             string filePath = Path.Combine(uploadsFolder, uniqueFileName);

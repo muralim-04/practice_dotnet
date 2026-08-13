@@ -5,12 +5,13 @@ namespace practice_dotnet.Services.PostServices
 {
     public interface IPostService
     {
-        Task<Response<bool>> CreatePost(ReqPostDto post, int userId);
+        Task<Response<PostResDto>> CreatePost(PostReqDto post, int userId);
         Task GetPost();
-        Task GetAllPosts();
+        Task<Response<PagedResult<PostResDto>>> GetAllPosts(int pageNumber, int pageSize);
         Task GetUserPosts();
         Task EditPost();
-        Task DeletePost();
+        Task<Response<bool>> DeletePost(int postId, int userId);
+        Task<Response<bool>> DeletePostAdmin(int postId);
 
         // COMMENTS SECTION
         Task CreateComment();

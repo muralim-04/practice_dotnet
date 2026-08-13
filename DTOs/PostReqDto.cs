@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace practice_dotnet.DTOs
 {
-    public class ReqPostDto
+    public class PostReqDto
     {
         [Required]
         [StringLength(40, MinimumLength = 4)]
