@@ -3,12 +3,9 @@
     public class UserPost
     {
         public int Id { get; set; }
-        public required string Title { get; set; }
         public required string Content { get; set; }
         public string? ImageUrl { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-
-        public double Score { get; set; }
 
         // navigation properties
         public int UserId { get; set; }

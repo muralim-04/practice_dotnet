@@ -3,6 +3,7 @@ using practice_dotnet.Entities;
 using Microsoft.EntityFrameworkCore;
 using practice_dotnet.Helpers;
 using practice_dotnet.DTOs;
+using Microsoft.Extensions.Configuration.UserSecrets;
 
 namespace practice_dotnet.Services.PostServices
 {
@@ -16,19 +17,56 @@ namespace practice_dotnet.Services.PostServices
             _environment = environment;
         }
 
-        public Task CreateComment()
+        public async Task<Response<CommentResDto>> CreateComment(int userId, CommentReqDto comment)
         {
-            throw new NotImplementedException();
+            var postExists = await _context.UserPosts.AnyAsync(up => up.Id == comment.PostId);
+            if (!postExists)
+            {
+                return Response<CommentResDto>.Fail("Post not found.");
+            }
+
+            var user = await _context.Users
+                .Where(u => u.Id == userId)
+                .Select(u => new { u.UserName, u.AvatarUrl })
+                .FirstOrDefaultAsync();
+
+            if (user == null)
+            {
+                return Response<CommentResDto>.Fail("User not found.");
+            }
+
+            var newComment = new Comment 
+            {
+                PostId = comment.PostId,
+                UserId = userId,
+                Content = comment.Comment
+            };
+
+            _context.Comments.Add(newComment);
+            await _context.SaveChangesAsync();
+
+            var commentDto = new CommentResDto
+            {
+                Id = newComment.Id,
+                PostId = newComment.PostId,
+                Comment = newComment.Content,
+                CreatedAt = newComment.CreatedAt,
+                UserId = userId,
+                Username = user.UserName,
+                UserImageUrl = user.AvatarUrl
+            };
+
+            return Response<CommentResDto>.Ok(commentDto);
         }
 
         public async Task<Response<PostResDto>> CreatePost(PostReqDto post, int userId)
         {
-            var userName = await _context.Users
+            var user = await _context.Users
                 .Where(u => u.Id == userId)
-                .Select(u => u.UserName)
+                .Select(u => new { u.UserName, u.AvatarUrl })
                 .FirstOrDefaultAsync();
 
-            if (userName == null)
+            if (user == null)
             {
                 return Response<PostResDto>.Fail("User was not found");
             }
@@ -41,7 +79,6 @@ namespace practice_dotnet.Services.PostServices
 
             var newPost = new UserPost
             {
-                Title = post.Title,
                 Content = post.Content,
                 ImageUrl = imageUrl,
                 UserId = userId
@@ -53,11 +90,15 @@ namespace practice_dotnet.Services.PostServices
             var userPostDto = new PostResDto
             {
                 Id = newPost.Id,
-                Title = newPost.Title,
                 Content = newPost.Content,
                 ImageUrl = newPost.ImageUrl,
                 CreatedAt = newPost.CreatedAt,
-                UserName = userName
+                UserId = userId,
+                Username = user.UserName,
+                UserProfileImageUrl = user.AvatarUrl,
+                LikeCount = 0,
+                CommentCount = 0,
+                IsLikedByCurrentUser = false
             };
 
             return Response<PostResDto>.Ok(userPostDto);
@@ -119,7 +160,7 @@ namespace practice_dotnet.Services.PostServices
             throw new NotImplementedException();
         }
 
-        public async Task<Response<PagedResult<PostResDto>>> GetAllPosts(int pageNumber, int pageSize)
+        public async Task<Response<PagedResult<PostResDto>>> GetAllPosts(int pageNumber, int pageSize, int? userId = null)
         {
             if (pageNumber < 1) pageNumber = 1;
             if (pageSize < 1) pageSize = 10;
@@ -134,11 +175,15 @@ namespace practice_dotnet.Services.PostServices
                 .Select(up => new PostResDto
                 {
                     Id = up.Id,
-                    Title = up.Title,
                     Content = up.Content,
                     ImageUrl = up.ImageUrl,
-                    CreatedAt = up.CreatedAt,
-                    UserName = up.User.UserName
+                    CreatedAt = up.CreatedAt,   
+                    UserId = up.User.Id,
+                    Username = up.User.UserName,
+                    UserProfileImageUrl = up.User.AvatarUrl,
+                    LikeCount = up.Likes.Count,
+                    CommentCount = up.Comments.Count,
+                    IsLikedByCurrentUser = userId.HasValue && up.Likes.Any(l => l.UserId == userId.Value)
                 })
                 .ToListAsync();
 
@@ -179,14 +224,47 @@ namespace practice_dotnet.Services.PostServices
             throw new NotImplementedException();
         }
 
-        public Task LikePost()
+        public async Task<Response<LikeResDto>> LikePost(int userId, int postId)
         {
-            throw new NotImplementedException();
-        }
+            var postExists = await _context.UserPosts.AnyAsync(up => up.Id == postId);
+            if (!postExists)
+            {
+                return Response<LikeResDto>.Fail("Post not found.");
+            }
 
-        public Task UnlikePost()
-        {
-            throw new NotImplementedException();
+            var userLiked = await _context.PostLikes
+                .FirstOrDefaultAsync(pl => pl.UserId == userId && pl.PostId == postId);
+
+            bool isLiked;
+
+            if (userLiked != null)
+            {
+                _context.PostLikes.Remove(userLiked);
+                isLiked = false;
+            }
+            else
+            {
+                _context.PostLikes.Add(new PostLike
+                {
+                    PostId = postId,
+                    UserId = userId
+                });
+                isLiked = true;
+            }
+
+            await _context.SaveChangesAsync();
+
+            var likeCount = await _context.PostLikes.CountAsync(pl => pl.PostId == postId);
+
+            var likeDto = new LikeResDto
+            {
+                PostId = postId,
+                IsLiked = isLiked,
+                LikeCount = likeCount
+            };
+
+            return Response<LikeResDto>.Ok(likeDto);
+
         }
 
         private async Task<string> UploadImageAsync(IFormFile file)

@@ -6,9 +6,6 @@ namespace practice_dotnet.DTOs
 {
     public class PostReqDto
     {
-        [Required]
-        [StringLength(40, MinimumLength = 4)]
-        public required string Title { get; set; }
 
         [Required]
         [StringLength(90, MinimumLength = 4)]

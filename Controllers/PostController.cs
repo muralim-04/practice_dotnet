@@ -44,7 +44,11 @@ namespace practice_dotnet.Controllers
         [HttpGet("getAllPosts")]
         public async Task<ActionResult<PagedResult<PostResDto>>> GetAllPosts(int pageNumber = 1, int pageSize = 10)
         {
-            var response = await _postService.GetAllPosts(pageNumber, pageSize);
+            int? userId = int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var parsedId)
+                ? parsedId
+                : null;
+
+            var response = await _postService.GetAllPosts(pageNumber, pageSize, userId);
 
             if (!response.Success)
             {
@@ -59,7 +63,7 @@ namespace practice_dotnet.Controllers
         }
 
         [Authorize]
-        [HttpDelete("deletePost")]
+        [HttpDelete("deletePost/{postId}")]
         public async Task<ActionResult<bool>> DeletePost(int postId)
         {
             int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
@@ -79,7 +83,7 @@ namespace practice_dotnet.Controllers
         }
 
         [Authorize(Roles = "Admin")]
-        [HttpDelete("deletePostAdmin")]
+        [HttpDelete("deletePostAdmin/{postId}")]
         public async Task<ActionResult<bool>> DeletePostAdmin(int postId)
         { 
             var response = await _postService.DeletePostAdmin(postId);
@@ -94,6 +98,48 @@ namespace practice_dotnet.Controllers
             }
 
             return Ok(true);
+        }
+
+        [Authorize]
+        [HttpPost("likeThePost")]
+        public async Task<ActionResult<LikeResDto>> LikeThePost(int postId)
+        {
+            int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
+            var response = await _postService.LikePost(userId, postId);
+
+            if (!response.Success)
+            {
+                return Problem(
+                    statusCode: StatusCodes.Status400BadRequest,
+                    title: "Bad Request",
+                    detail: response.Message
+                );
+            }
+
+            return Ok(response.Data);
+
+        }
+
+        [Authorize]
+        [HttpPost("leaveComment")]
+        public async Task<ActionResult<LikeResDto>> LeaveComment([FromBody] CommentReqDto comment)
+        {
+            int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
+            var response = await _postService.CreateComment(userId, comment);
+
+            if (!response.Success)
+            {
+                return Problem(
+                    statusCode: StatusCodes.Status400BadRequest,
+                    title: "Bad Request",
+                    detail: response.Message
+                );
+            }
+
+            return Ok(response.Data);
+
         }
     }
 }

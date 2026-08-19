@@ -149,13 +149,6 @@ namespace practice_dotnet.Migrations
                     b.Property<string>("ImageUrl")
                         .HasColumnType("text");
 
-                    b.Property<double>("Score")
-                        .HasColumnType("double precision");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasColumnType("text");
-
                     b.Property<int>("UserId")
                         .HasColumnType("integer");
 

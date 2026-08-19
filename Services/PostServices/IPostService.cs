@@ -7,22 +7,21 @@ namespace practice_dotnet.Services.PostServices
     {
         Task<Response<PostResDto>> CreatePost(PostReqDto post, int userId);
         Task GetPost();
-        Task<Response<PagedResult<PostResDto>>> GetAllPosts(int pageNumber, int pageSize);
+        Task<Response<PagedResult<PostResDto>>> GetAllPosts(int pageNumber, int pageSize, int? userId = null);
         Task GetUserPosts();
         Task EditPost();
         Task<Response<bool>> DeletePost(int postId, int userId);
         Task<Response<bool>> DeletePostAdmin(int postId);
 
         // COMMENTS SECTION
-        Task CreateComment();
+        Task<Response<CommentResDto>> CreateComment(int userId, CommentReqDto comment);
         Task GetPostComments();
         Task GetUserComments();
         Task EditComment();
         Task DeleteComment();
 
         // LIKES SECTION
-        Task LikePost();
-        Task UnlikePost();
+        Task<Response<LikeResDto>> LikePost(int userId, int postId);
         Task GetUserLikedposts();
     }
 }
